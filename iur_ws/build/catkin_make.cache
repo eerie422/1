@@ -1,0 +1,2 @@
+topic_package
+-DCATKIN_DEVEL_PREFIX=/home/s/iur_ws/devel -DCMAKE_INSTALL_PREFIX=/home/s/iur_ws/install -G Unix Makefiles
