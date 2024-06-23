@@ -186,108 +186,110 @@ Int64 num
 通过以上步骤，你可以成功运行你所创建的ROS包，并完成发布节点和订阅节点的通讯演示。
 
 
-rui_ws
+### README: 使用ROS控制RViz中的机器人模型关节角度
 
-##使用ROS控制RViz中的机器人模型关节角度
-概述
-本README提供了如何创建一个ROS包，该包包括一个节点用于控制RViz中机器人模型的关节角度。步骤包括创建新的ROS包，使用mini2_description包在RViz中显示机器人模型，以及创建一个节点发布关节状态信息以控制机器人的关节角度。
+#### 概述
+本README提供了如何创建一个ROS包，该包包括一个节点用于控制RViz中机器人模型的关节角度。步骤包括创建新的ROS包，使用`mini2_description`包在RViz中显示机器人模型，以及创建一个节点发布关节状态信息以控制机器人的关节角度。
 
-前提条件
-已安装并正确配置ROS（Noetic/foxy/galactic/其他版本）。
-在您的ROS工作空间中已有mini2_description包（或等效包）。
-已安装RViz。
-创建ROS包并控制关节角度的步骤
-创建新ROS包
+#### 前提条件
+- 已安装并正确配置ROS（Noetic/foxy/galactic/其他版本）。
+- 在您的ROS工作空间中已有`mini2_description`包（或等效包）。
+- 已安装RViz。
 
-bash
-复制代码
-cd ~/catkin_ws/src
-catkin_create_pkg my_robot_control std_msgs sensor_msgs roscpp
-cd ~/catkin_ws
-catkin_make
-source devel/setup.bash
-设置mini2_description包
-确保mini2_description包在您的工作空间的src目录中。该包应包括必要的URDF文件和display.launch文件。
+#### 创建ROS包并控制关节角度的步骤
 
-在RViz中启动机器人模型
+1. **创建新ROS包**
+   ```bash
+   cd ~/catkin_ws/src
+   catkin_create_pkg my_robot_control std_msgs sensor_msgs roscpp
+   cd ~/catkin_ws
+   catkin_make
+   source devel/setup.bash
+   ```
 
-bash
-复制代码
-roslaunch mini2_description display.launch
-创建关节状态发布节点
-在my_robot_control包中创建一个新节点，用于发布关节状态消息。
+2. **设置`mini2_description`包**
+   确保`mini2_description`包在您的工作空间的`src`目录中。该包应包括必要的URDF文件和`display.launch`文件。
 
-节点脚本 (src/joint_state_publisher.cpp)
+3. **在RViz中启动机器人模型**
+   ```bash
+   roslaunch mini2_description display.launch
+   ```
 
-cpp
-复制代码
-#include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
+4. **创建关节状态发布节点**
+   在`my_robot_control`包中创建一个新节点，用于发布关节状态消息。
 
-int main(int argc, char **argv) {
-    ros::init(argc, argv, "joint_state_publisher");
-    ros::NodeHandle nh;
+   - **节点脚本 (`src/joint_state_publisher.cpp`)**
+     ```cpp
+     #include <ros/ros.h>
+     #include <sensor_msgs/JointState.h>
 
-    ros::Publisher joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
-    ros::Rate loop_rate(10);
+     int main(int argc, char **argv) {
+         ros::init(argc, argv, "joint_state_publisher");
+         ros::NodeHandle nh;
 
-    sensor_msgs::JointState joint_state;
-    joint_state.name.resize(1);
-    joint_state.position.resize(1);
+         ros::Publisher joint_pub = nh.advertise<sensor_msgs::JointState>("joint_states", 10);
+         ros::Rate loop_rate(10);
 
-    while (ros::ok()) {
-        joint_state.header.stamp = ros::Time::now();
-        joint_state.name[0] = "joint1";  // 替换为实际关节名称
-        joint_state.position[0] = 1.0;  // 替换为所需的关节角度
+         sensor_msgs::JointState joint_state;
+         joint_state.name.resize(1);
+         joint_state.position.resize(1);
 
-        joint_pub.publish(joint_state);
+         while (ros::ok()) {
+             joint_state.header.stamp = ros::Time::now();
+             joint_state.name[0] = "joint1";  // 替换为实际关节名称
+             joint_state.position[0] = 1.0;  // 替换为所需的关节角度
 
-        ros::spinOnce();
-        loop_rate.sleep();
-    }
-    return 0;
-}
-CMakeLists.txt
-确保包含以下行以构建节点：
+             joint_pub.publish(joint_state);
 
-cmake
-复制代码
-add_executable(joint_state_publisher src/joint_state_publisher.cpp)
-target_link_libraries(joint_state_publisher ${catkin_LIBRARIES})
-Package.xml
-确保声明了依赖关系：
+             ros::spinOnce();
+             loop_rate.sleep();
+         }
+         return 0;
+     }
+     ```
 
-xml
-复制代码
-<depend>roscpp</depend>
-<depend>sensor_msgs</depend>
-构建包
+   - **CMakeLists.txt**
+     确保包含以下行以构建节点：
+     ```cmake
+     add_executable(joint_state_publisher src/joint_state_publisher.cpp)
+     target_link_libraries(joint_state_publisher ${catkin_LIBRARIES})
+     ```
 
-bash
-复制代码
-cd ~/catkin_ws
-catkin_make
-source devel/setup.bash
-运行关节状态发布节点
-在一个终端中，启动RViz显示：
+   - **Package.xml**
+     确保声明了依赖关系：
+     ```xml
+     <depend>roscpp</depend>
+     <depend>sensor_msgs</depend>
+     ```
 
-bash
-复制代码
-roslaunch mini2_description display.launch
-在另一个终端中，运行关节状态发布节点：
+5. **构建包**
+   ```bash
+   cd ~/catkin_ws
+   catkin_make
+   source devel/setup.bash
+   ```
 
-bash
-复制代码
-rosrun my_robot_control joint_state_publisher
-代码与设置说明
-joint_state_publisher.cpp：该脚本初始化一个ROS节点，发布关节状态到/joint_states话题。关节状态消息包括关节的名称和所需的角度。
-CMakeLists.txt：配置构建过程以编译joint_state_publisher节点。
-Package.xml：指定包所需的依赖项。
-注意事项
-脚本中的关节名称和位置应与机器人模型的URDF中定义的名称和位置相匹配。
-根据需要调整循环频率和关节位置，以动态控制机器人的关节。
+6. **运行关节状态发布节点**
+   在一个终端中，启动RViz显示：
+   ```bash
+   roslaunch mini2_description display.launch
+   ```
+
+   在另一个终端中，运行关节状态发布节点：
+   ```bash
+   rosrun my_robot_control joint_state_publisher
+   ```
+
+#### 代码与设置说明
+- **`joint_state_publisher.cpp`**：该脚本初始化一个ROS节点，发布关节状态到`/joint_states`话题。关节状态消息包括关节的名称和所需的角度。
+- **`CMakeLists.txt`**：配置构建过程以编译`joint_state_publisher`节点。
+- **`Package.xml`**：指定包所需的依赖项。
+
+#### 注意事项
+- 脚本中的关节名称和位置应与机器人模型的URDF中定义的名称和位置相匹配。
+- 根据需要调整循环频率和关节位置，以动态控制机器人的关节。
+
 通过遵循这些步骤，您将能够使用ROS节点控制在RViz中显示的机器人模型的关节角度。
-
 
 
 
